@@ -108,11 +108,11 @@ contract Hedgehog is IERC20 {
     // activate is a private function (only callable by the contract owner)
     // we use this to activate the tokens once the minumum amount have been
     // sold.
-    function activate() private {
+    function activate() public {
         active = true;
     }
 
-    function allowRedemptions() private {
+    function allowRedemptions() public {
         redeemable = true;
     }
 
