@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import HedgehogContract from "../contracts/Hedgehog.json";
 import { useMetaMask } from "metamask-react";
 import Web3 from "web3";
+import { useForm } from "react-hook-form";
 
 function Account() {
 
@@ -16,6 +17,15 @@ function Account() {
   const [contractActive, setContractActive] = useState(false);
 
   const { status, connect, account, chainId, ethereum } = useMetaMask();
+
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+  const onSubmit = data => {
+    contract.methods.add(data.address).send({
+      from: account 
+    })
+    .then(resp => setResp(resp))
+    .catch(err => setError(err.message));
+  };
 
   useEffect(() => {
     async function loadContractActive() {
@@ -46,6 +56,8 @@ function Account() {
         }
         loadAccountBalance();
     }
+    setResp(undefined);
+    setError(undefined);
   }, [account]);
 
   useEffect(() => {
@@ -67,25 +79,6 @@ function Account() {
     .catch(err => setError(err.message));
   }
 
-  // async function send() {
-  //     const decimals = window.web3.utils.toBN(18);
-  //     const amount = window.web3.utils.toBN(1);  
-
-  //     const tx = {
-  //       from: account,
-  //       to: '0xDf1C3bc718dea427E2390D266F0eC9e966C52863',
-  //       value: window.web3.utils.toWei('1', 'ether'),
-  //       data: contract.methods.transfer('0xDf1C3bc718dea427E2390D266F0eC9e966C52863', amount.mul(window.web3.utils.toBN(10).pow(decimals))).encodeABI()
-  //     }
-       
-  //     const txHash = await window.ethereum.request({
-  //       method: 'eth_sendTransaction',
-  //       params: [tx]
-  //     });
-  
-  //     setResp(txHash);
-  // }
-
   function activate() {
     contract.methods.activate().send({
       from: account
@@ -103,11 +96,20 @@ function Account() {
         { status === 'notConnected' && (
             <button onClick={connect}>Connect Metamask</button>
         )}
-        { status === 'connected' && account === '0x62b444c5fc6233bcdabe382dca8b1bf36092a73a' && (
+        { status === 'connected' && account === '0x1831a7c160b02221accc26bf9b353119a1eb1706' && (
             <button onClick={activate}>Activate Tokens</button>
         )}
-        { status === 'connected' && account !== '0x62b444c5fc6233bcdabe382dca8b1bf36092a73a' && (
+        { status === 'connected' && (
             <button onClick={order}>Order Tokens</button>
+        )}
+        { status === 'connected' && account === '0x1831a7c160b02221accc26bf9b353119a1eb1706' && (
+            <div>
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <input {...register("address", { required: true })} />
+                {errors.address && <span>This field is required</span>}
+                <input type="submit" />
+              </form>
+            </div>
         )}
         <p>{ error }</p>
         <p>{ JSON.stringify(resp) }</p>

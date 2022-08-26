@@ -46,6 +46,7 @@ contract Hedgehog is IERC20 {
 
     constructor() {
         balances[msg.sender] = totalSupply_;
+        whitelist[msg.sender] = true;
     }
 
     modifier onlyWhitelisted() {
@@ -77,6 +78,9 @@ contract Hedgehog is IERC20 {
     }
 
     function transfer(address receiver, uint256 numTokens) public override  returns (bool) {
+        // Receiver must be in whitelist
+        require(whitelist[receiver] == true, 'Receiver address must be whitelisted.');
+
         // Tokens must be active
         require(active == true, "The tokens are not active yet.");
 
