@@ -24,6 +24,8 @@ contract Hedgehog is IERC20 {
     string public constant symbol = "HH";
     uint8 public constant decimals = 18;
 
+    mapping(address => bool) whitelist;
+
     // Initial token price needs to be set
     uint256 public constant tokenPrice = 1 ether; // 1 token for 1 ether
 
@@ -46,6 +48,23 @@ contract Hedgehog is IERC20 {
         balances[msg.sender] = totalSupply_;
     }
 
+    modifier onlyWhitelisted() {
+        require(isWhitelisted(msg.sender), 'Address is not whitelisted.');
+        _;
+    }
+
+    function add(address _address) public {
+        whitelist[_address] = true;
+    }
+
+    function remove(address _address) public {
+        whitelist[_address] = false;
+    }
+
+    function isWhitelisted(address _address) public view returns(bool) {
+        return whitelist[_address];
+    }
+
     // ERC20 standard functions
     // These are functions defined by the ERC20 standard for fungible tokens, we've modified
     // them slightly to only allow transfers if the tokens are marked as active.
@@ -57,7 +76,7 @@ contract Hedgehog is IERC20 {
         return balances[tokenOwner];
     }
 
-    function transfer(address receiver, uint256 numTokens) public override returns (bool) {
+    function transfer(address receiver, uint256 numTokens) public override  returns (bool) {
         // Tokens must be active
         require(active == true, "The tokens are not active yet.");
 
@@ -65,7 +84,7 @@ contract Hedgehog is IERC20 {
         require(numTokens <= balances[msg.sender], "Sender does not have enough tokens.");
 
         // check receiver wouldn't be taken over the max allowable holding
-        require(balances[receiver]+numTokens <= maxHolding, "Receiver would exceed max holding.");
+        require(balances[receiver]+numTokens >= maxHolding, "Receiver would exceed max holding.");
 
         // update the sender's balance
         balances[msg.sender] = balances[msg.sender]-numTokens;
@@ -116,15 +135,12 @@ contract Hedgehog is IERC20 {
         redeemable = true;
     }
 
-    function order(uint256 _amount) external payable {
+    function order(uint256 _amount) external payable onlyWhitelisted {
         // check the buyer is sending enough ether
         require(msg.value == _amount * tokenPrice, 'Need to send exact amount of ether');
 
-        // check contract has enough tokens left
-        require(balances[address(this)] >= _amount);
-
         // check message sender won't go over maxHolding
-        require(balances[msg.sender]+_amount <= maxHolding);
+        require(balances[msg.sender]+_amount <= maxHolding, 'You would go over your max holding');
         
         /*
          * sends the requested amount of tokens
@@ -134,7 +150,7 @@ contract Hedgehog is IERC20 {
         transfer(msg.sender, _amount);
     }
 
-    function redeem(uint256 _amount) external {
+    function redeem(uint256 _amount) external onlyWhitelisted {
         require(redeemable == true, "Tokens are not redeemable yet.");
 
         // check sender has enough tokens

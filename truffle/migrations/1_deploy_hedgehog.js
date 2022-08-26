@@ -1,5 +1,7 @@
-const Hedgehog = artifacts.require("Hedgehog");
+// SPDX-License-Identifier: NONE
+const HedgehogToken = artifacts.require("Hedgehog");
 
-module.exports = function (deployer) {
-  deployer.deploy(Hedgehog);
+module.exports = async function (deployer, network, accounts) {
+  await deployer.deploy(HedgehogToken);
+  await HedgehogToken.deployed();
 };
