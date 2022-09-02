@@ -71,7 +71,7 @@ function Account() {
   }, [contract, account]);
 
   function order() {
-    contract.methods.order(1).send({
+    contract.methods.order("0xc3451fa2800ba459cd458a59e73e5c28ba22ecc2", 1).send({
       from: account,
       value: window.web3.utils.toWei("1", "ether"),  
     })
@@ -87,23 +87,41 @@ function Account() {
     .catch(err => setError(err.message));
   }
 
+  function deactivate() {
+    contract.methods.deactivate().send({
+      from: account
+    })
+    .then(resp => setResp(resp))
+    .catch(err => setError(err.message));
+  }
+
   return (
       <div className="Account">
-        <p>Account: { account }</p>
+        <h3>Account Details</h3>
+        <p>Ethereum Address: { account }</p>
         <p>Status: { status }</p>
         <p>ETH Balance: { ethBalance } ETH</p>
-        <p>HH Balance: { hhBalance } HH</p>
+        <p>HH Balance: { hhBalance } HH (These are our Hedgehog tokens)</p>
         { status === 'notConnected' && (
             <button onClick={connect}>Connect Metamask</button>
         )}
-        { status === 'connected' && account === '0x1831a7c160b02221accc26bf9b353119a1eb1706' && (
-            <button onClick={activate}>Activate Tokens</button>
+        <h3>Functions</h3>
+        { status === 'connected' && account === '0xec7aaa40bb5bc2b5666d1d6cc9096d828a136f0b' && (
+            <div>
+              <h4>Activate/Deactivate Tokens (Contract creator only)</h4>
+              <button onClick={activate}>Activate Tokens</button>
+              <button onClick={deactivate}>Deactivate Tokens</button>
+            </div>
         )}
         { status === 'connected' && (
-            <button onClick={order}>Order Tokens</button>
-        )}
-        { status === 'connected' && account === '0x1831a7c160b02221accc26bf9b353119a1eb1706' && (
             <div>
+              <h4>Order Tokens (Anyone, but will only succeed for whitelisted)</h4>
+              <button onClick={order}>Order Tokens</button>
+            </div>
+        )}
+        { status === 'connected' && account === '0xec7aaa40bb5bc2b5666d1d6cc9096d828a136f0b' && (
+            <div>
+              <h4>Whitelist an ETH address (Contract creator only, in a production setting this would be called as part of the KYC flow)</h4>
               <form onSubmit={handleSubmit(onSubmit)}>
                 <input {...register("address", { required: true })} />
                 {errors.address && <span>This field is required</span>}
